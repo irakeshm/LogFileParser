@@ -13,7 +13,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class BugReportParser {
-
+	
+	
 	public static void main(String[] args){
 		
 		printLogFileDetails("4667","");
@@ -28,7 +29,9 @@ public class BugReportParser {
 	            List<String> linesForGivenProcessId = new ArrayList<>();
 	            linesForGivenProcessId = stream.filter(str -> Pattern.matches("\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}  "+processId+"  .*", str)).collect(Collectors.toList());
 	            String[] linesArr = linesForGivenProcessId.stream().toArray(String[]::new);
-	            printFatalExceptionDetails(linesArr,linesForGivenProcessId.size());
+	            
+	            //printFatalExceptionDetails(linesArr,linesForGivenProcessId.size());
+	            printUniqueErrorMessages(linesForGivenProcessId);
 	            
 		 } catch (Exception e) {
 	            System.out.println(e);
@@ -69,16 +72,52 @@ public class BugReportParser {
         System.out.println("Stacktrace:");
         System.out.println(" ============== ");
         for (Entry<String, LogDetail> entry : map.entrySet()) {
-            System.out.println(entry.getKey());
-            System.out.print(entry.getValue().getStacktrace());
+            System.out.println(entry.getKey());            
+            for(String s: entry.getValue().getStacktrace())
+            	System.out.println(s);
         }
-        
-        
+	}
+	
+	public static void printUniqueErrorMessages(List<String> lines)
+	{
+		List<String> errorLogLines = lines.stream().filter(str -> 
+        {
+            return Pattern.matches("\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}  4667  \\d* E .*", str);
+        }).collect(Collectors.toList());
+		
+		Map<String, Integer> errorMap = new HashMap<>();
+		
+		int occuranceCount=0;
+		for(String error:errorLogLines)
+		{
+			int lastColonIndex = error.indexOf(":", 18);
+			String key = error.substring(lastColonIndex + 1);
+			if(!key.contains("FATAL EXCEPTION") && !key.contains("        at") && !key.contains("PID: 4667"))
+			{
+				if (!errorMap.containsKey(key)) {
+					occuranceCount=1;
+					errorMap.put(key, occuranceCount);
+				}
+				else {
+					occuranceCount=errorMap.get(key);
+					occuranceCount++;
+					errorMap.put(key, occuranceCount);
+				}
+			}
+		}
+		
+		System.out.println("Errors");
+        System.out.println("=====");
+        System.out.println("Error Message| # of Occurrences");
+		for (Entry<String, Integer> entry : errorMap.entrySet()) {
+            System.out.println(entry.getKey() + "|" + entry.getValue());
+        }
+
 	}
 	
 	public static class LogDetail {
 	        Integer count;
-	        List<String> stacktrace;
+	        List<String> stacktrace=new ArrayList<>();
 
 	        public Integer getCount() {
 	            return count;

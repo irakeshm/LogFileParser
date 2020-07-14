@@ -30,8 +30,9 @@ public class BugReportParser {
 	            linesForGivenProcessId = stream.filter(str -> Pattern.matches("\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}  "+processId+"  .*", str)).collect(Collectors.toList());
 	            String[] linesArr = linesForGivenProcessId.stream().toArray(String[]::new);
 	            
-	            //printFatalExceptionDetails(linesArr,linesForGivenProcessId.size());
+	            printFatalExceptionDetails(linesArr,linesForGivenProcessId.size());
 	            printUniqueErrorMessages(linesForGivenProcessId);
+	            printErrorMessageForGivenInput(linesForGivenProcessId,errorMessageString);
 	            
 		 } catch (Exception e) {
 	            System.out.println(e);
@@ -115,6 +116,39 @@ public class BugReportParser {
 
 	}
 	
+	public static void printErrorMessageForGivenInput(List<String> lines, String searchText)
+	{
+		List<String> errorLines=lines.stream().filter(str ->str.contains(searchText)).collect(Collectors.toList());
+		
+		Map<String, Integer> errorMap = new HashMap<>();
+		
+		int occuranceCount=0;
+		for(String error:errorLines)
+		{
+			int lastColonIndex = error.indexOf(":", 18);
+			String key = error.substring(lastColonIndex + 1);
+			
+			if (!errorMap.containsKey(key)) {
+				occuranceCount=1;
+				errorMap.put(key, occuranceCount);
+			}
+			else {
+				occuranceCount=errorMap.get(key);
+				occuranceCount++;
+				errorMap.put(key, occuranceCount);
+			}
+			
+		}
+		
+		System.out.println("Matching Strings");
+        System.out.println("=============");
+        System.out.println("Matching String| # of Occurrences");
+		for (Entry<String, Integer> entry : errorMap.entrySet()) {
+            System.out.println(entry.getKey() + "|" + entry.getValue());
+        }
+		
+		
+	}
 	public static class LogDetail {
 	        Integer count;
 	        List<String> stacktrace=new ArrayList<>();

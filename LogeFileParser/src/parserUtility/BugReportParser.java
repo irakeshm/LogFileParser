@@ -17,10 +17,16 @@ public class BugReportParser {
 	
 	public static void main(String[] args){
 		
-		printLogFileDetails("4667","");
+		String[] serachText= {"WARNING","OOM","OutOfMemoryError"};
+		String processId="4667";
+		printLogFileDetails(processId,serachText[0]);
 		
 	}
-	
+	/**
+	 * Description: This method calls different Print Methods based on the given requirement
+	 * @param processId
+	 * @param errorMessageString
+	 */
 	public static void printLogFileDetails(String processId, String errorMessageString){
 			
 		 try (BufferedReader reader = new BufferedReader(
@@ -39,6 +45,12 @@ public class BugReportParser {
 	        }
 	}
 	
+	/**
+	 * Description: Find all FATAL crashes, and List “Unique Exception messages” 
+	 * with the number of occurrences with List stack trace for every unique Fatal exception
+	 * @param inputArray
+	 * @param searchAreaSize
+	 */
 	public static void printFatalExceptionDetails(String[] inputArray, int searchAreaSize)
 	{
 		List<Integer> indexList = IntStream.range(0, searchAreaSize)
@@ -78,10 +90,13 @@ public class BugReportParser {
             	System.out.println(s);
         }
 	}
-	
-	public static void printUniqueErrorMessages(List<String> lines)
+	/**
+	 * Description: Find all errors with log level E and List Unique errors with the number of occurrences
+	 * @param inputList
+	 */
+	public static void printUniqueErrorMessages(List<String> inputList)
 	{
-		List<String> errorLogLines = lines.stream().filter(str -> 
+		List<String> errorLogLines = inputList.stream().filter(str -> 
         {
             return Pattern.matches("\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}  4667  \\d* E .*", str);
         }).collect(Collectors.toList());
@@ -115,10 +130,14 @@ public class BugReportParser {
         }
 
 	}
-	
-	public static void printErrorMessageForGivenInput(List<String> lines, String searchText)
+	/**
+	 * Description: For the given Strings List unique lines containing that string and the number of occurrences
+	 * @param inputList
+	 * @param searchText
+	 */
+	public static void printErrorMessageForGivenInput(List<String> inputList, String searchText)
 	{
-		List<String> errorLines=lines.stream().filter(str ->str.contains(searchText)).collect(Collectors.toList());
+		List<String> errorLines=inputList.stream().filter(str ->str.contains(searchText)).collect(Collectors.toList());
 		
 		Map<String, Integer> errorMap = new HashMap<>();
 		
@@ -149,6 +168,11 @@ public class BugReportParser {
 		
 		
 	}
+	/**
+	 * Log Details Class to map with Fatal Exceptions, and get the occurance and Stack Traces.
+	 * @author RKMishra
+	 *
+	 */
 	public static class LogDetail {
 	        Integer count;
 	        List<String> stacktrace=new ArrayList<>();
@@ -169,7 +193,14 @@ public class BugReportParser {
 	            this.stacktrace = stacktrace;
 	        }
 	    }
-	
+	/**
+	 * Description: Finds the Stack Traces in Exception List
+	 * @param lineNum
+	 * @param lastColonIndex
+	 * @param lines
+	 * @param searchStr
+	 * @return
+	 */
 	private static List<String> findStackTrace(int lineNum, int lastColonIndex, String[] lines, String searchStr) {
         List<String> stackTrace = new ArrayList<>();
         while (lineNum < lines.length && lines[lineNum].indexOf(searchStr) == 18
